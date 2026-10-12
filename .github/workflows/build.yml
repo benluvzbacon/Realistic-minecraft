@@ -15,7 +15,17 @@ jobs:
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '21', cache: gradle}
       - uses: gradle/actions/setup-gradle@v4
-      - run: chmod +x gradlew && ./gradlew test build --stacktrace
+      - name: Test and build
+        shell: bash
+        run: |
+          chmod +x gradlew
+          set +e
+          ./gradlew test build --stacktrace 2>&1 | tee build.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            tail -80 build.log | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          exit "$code"
       - name: Collect playable jar
         run: |
           mkdir artifact
