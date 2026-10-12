@@ -1,0 +1,1 @@
+{"required":true,"package":"com.virtualplanet.mixin","compatibilityLevel":"JAVA_21","client":["ClientWorldSkyMixin"],"injectors":{"defaultRequire":1}}
