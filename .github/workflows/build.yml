@@ -23,7 +23,7 @@ jobs:
           ./gradlew test build --stacktrace 2>&1 | tee build.log
           code=${PIPESTATUS[0]}
           if [ "$code" -ne 0 ]; then
-            grep -E -i 'error:|FAILURE|What went wrong|Could not|exception|caused by|problem occurred' build.log | head -10 | while IFS= read -r line; do echo "::error::$line"; done
+            grep -E -i 'src/|> Task|FAILED|error|symbol:|location:|expected:|but was:' build.log | head -10 | while IFS= read -r line; do echo "::error::$line"; done
           fi
           exit "$code"
       - name: Collect playable jar
