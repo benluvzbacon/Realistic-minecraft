@@ -1,0 +1,38 @@
+name: Build
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21', cache: gradle}
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Test and build
+        shell: bash
+        run: |
+          chmod +x gradlew
+          set +e
+          ./gradlew test build --stacktrace 2>&1 | tee build.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            grep -E -i 'src/|> Task|FAILED|error|symbol:|location:|expected:|but was:' build.log | head -10 | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          exit "$code"
+      - name: Collect playable jar
+        run: |
+          mkdir artifact
+          find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' ! -name '*-javadoc.jar' -exec cp {} artifact/ \;
+          test "$(find artifact -type f -name '*.jar' | wc -l)" -eq 1
+      - uses: actions/upload-artifact@v4
+        with: {name: virtual-planet-local-skies, path: artifact/*.jar, if-no-files-found: error}
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with: {files: artifact/*.jar}

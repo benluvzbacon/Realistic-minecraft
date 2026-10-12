@@ -1,0 +1,3 @@
+package com.virtualplanet.client;
+import com.virtualplanet.config.PlanetConfig; import com.virtualplanet.math.*;
+public final class ClientPlanetState { private static volatile PlanetConfig config=PlanetConfig.defaults(); private static volatile PlanetGeometry geometry=new PlanetGeometry(0,0,59_999_968,59_999_968,0,PlanetConfig.LatitudeMode.EQUIRECTANGULAR_CLAMPED); private ClientPlanetState(){} public static void set(PlanetConfig c,double x,double z,double w){config=c;geometry=PlanetGeometry.fromBorder(x,z,w,c);} public static PlanetConfig config(){return config;} public static PlanetGeometry geometry(){return geometry;} }

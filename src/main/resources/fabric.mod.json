@@ -1,0 +1,7 @@
+{
+ "schemaVersion":1,"id":"virtualplanet","version":"${version}","name":"Virtual Planet: Local Skies","description":"Per-player local skies on a mathematical planet while terrain remains flat.",
+ "authors":["Virtual Planet contributors"],"license":"MIT","environment":"*",
+ "entrypoints":{"main":["com.virtualplanet.VirtualPlanetMod"],"client":["com.virtualplanet.client.VirtualPlanetClient"]},
+ "mixins":["virtualplanet.mixins.json",{"config":"virtualplanet.client.mixins.json","environment":"client"}],
+ "depends":{"fabricloader":">=0.16.5","minecraft":"~1.21.1","java":">=21","fabric-api":"*"}
+}

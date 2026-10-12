@@ -1,0 +1,29 @@
+package com.virtualplanet.command;
+import com.virtualplanet.VirtualPlanetMod; import com.virtualplanet.config.*; import com.virtualplanet.math.*; import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback; import net.minecraft.server.command.ServerCommandSource; import net.minecraft.text.Text; import net.minecraft.world.border.WorldBorder;
+import static net.minecraft.server.command.CommandManager.literal;
+public final class PlanetCommands {
+ private PlanetCommands(){}
+ public static void register() {
+  CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) ->
+   dispatcher.register(literal("virtualplanet")
+    .then(literal("info").executes(context -> info(context.getSource())))
+    .then(literal("debug").executes(context -> debug(context.getSource())))
+    .then(literal("recalculate").requires(source -> source.hasPermissionLevel(2)).executes(context -> {
+     VirtualPlanetMod.checkBorder(context.getSource().getServer());
+     VirtualPlanetMod.broadcast(context.getSource().getServer());
+     context.getSource().sendFeedback(() -> Text.literal("Virtual planet geometry synchronized."), false);
+     return 1;
+    }))
+    .then(literal("reload").requires(source -> source.hasPermissionLevel(2)).executes(context -> {
+     ConfigManager.load();
+     VirtualPlanetMod.broadcast(context.getSource().getServer());
+     context.getSource().sendFeedback(() -> Text.literal("Virtual planet configuration reloaded."), true);
+     return 1;
+    }))
+   )
+  );
+ }
+ private static int info(ServerCommandSource s){PlanetConfig c=ConfigManager.get();WorldBorder b=s.getServer().getOverworld().getWorldBorder();PlanetGeometry g=PlanetGeometry.fromBorder(b.getCenterX(),b.getCenterZ(),b.getSize(),c);s.sendFeedback(()->Text.literal(String.format("Virtual Planet: enabled=%s, border center=(%.1f, %.1f), width=%.1f, circumference=%.1f, radius=%.1f, day=%d ticks",c.enabled(),b.getCenterX(),b.getCenterZ(),b.getSize(),g.circumference(),g.radius(),c.dayLengthTicks())),false);return 1;}
+ private static int debug(ServerCommandSource s){try{var p=s.getPlayerOrThrow();PlanetConfig c=ConfigManager.get();WorldBorder b=s.getServer().getOverworld().getWorldBorder();PlanetGeometry g=PlanetGeometry.fromBorder(b.getCenterX(),b.getCenterZ(),b.getSize(),c);SolarPosition q=SolarCalculator.calculate(p.getWorld().getTimeOfDay(),0,p.getX(),p.getZ(),g,c);s.sendFeedback(()->Text.literal(String.format("x=%.2f z=%.2f lon=%.3f° lat=%.3f° local=%02d:%02d elevation=%.2f° azimuth=%.2f° twilight=%s sunrise=%s sunset=%s",p.getX(),p.getZ(),Math.toDegrees(q.longitude()),Math.toDegrees(q.latitude()),(int)(q.localDayFraction()*24),(int)(q.localDayFraction()*1440)%60,Math.toDegrees(q.elevation()),Math.toDegrees(q.azimuth()),q.twilight(),time(q.sunriseFraction()),time(q.sunsetFraction()))),false);return 1;}catch(Exception e){s.sendError(Text.literal("This command requires a player."));return 0;}}
+ private static String time(double f){return Double.isNaN(f)?"none":String.format("%02d:%02d",(int)(f*24),(int)(f*1440)%60);}
+}
